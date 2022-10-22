@@ -41,9 +41,6 @@ handler.create = (request, h) => {
     updatedAt,
   };
 
-  // const stringify = JSON.stringify(data, null, 2);
-  // fs.writeFileSync('./src/books.json', stringify);
-
   Book.push(data);
 
   const validateId = Book.filter((book) => book.id === id).length > 0;
