@@ -1,6 +1,4 @@
 const { nanoid } = require('nanoid');
-// const _ = require('lodash');
-// const fs = require('fs');
 const Book = require('./Book');
 
 const handler = {};
@@ -70,13 +68,69 @@ handler.create = (request, h) => {
 };
 
 handler.findAll = (request, h) => {
+  const { query } = request;
+
+  let reading = false;
+  let finished = false;
+  if (query.reading === '1') {
+    reading = true;
+  }
+  if (query.finished === '1') {
+    finished = true;
+  }
+
+  // Reformat data book & filter jika ada request query
   const result = [];
   Book.forEach((val) => {
-    result.push({
-      id: val.id,
-      name: val.name,
-      publisher: val.publisher,
-    });
+    // Jika query ada reading & tidak sama dengan null
+    if ('reading' in query && query.reading !== null) {
+      if (val.reading === reading) {
+        console.log(`Reading: ${reading}`);
+        result.push({
+          id: val.id,
+          name: val.name,
+          publisher: val.publisher,
+        });
+      }
+    }
+
+    // Jika query ada finished & tidak sama dengan null
+    if ('finished' in query && query.finished !== null) {
+      if (val.finished === finished) {
+        console.log(`Finished: ${finished}`);
+        result.push({
+          id: val.id,
+          name: val.name,
+          publisher: val.publisher,
+        });
+      }
+    }
+
+    // Jika query ada name & tidak sama dengan null
+    if ('name' in query && query.name !== null) {
+      // set tolowerCase
+      const originalVame = val.name.toLowerCase();
+      const queryName = query.name.toLowerCase();
+
+      if (originalVame.includes(queryName)) {
+        console.log(`Name: ${query.name}`);
+        result.push({
+          id: val.id,
+          name: val.name,
+          publisher: val.publisher,
+        });
+      }
+    }
+
+    // Jika tidak ada query atau query sama dengan null
+    if (typeof query === 'object' && Object.keys(query).length === 0) {
+      console.log('Everything else');
+      result.push({
+        id: val.id,
+        name: val.name,
+        publisher: val.publisher,
+      });
+    }
   });
 
   return h.response({
@@ -111,7 +165,7 @@ handler.update = (request, h) => {
   const { bookId } = request.params;
   const { payload } = request;
   const updatedAt = new Date().toISOString();
-  const index = Book.filter((val) => val.id === bookId);
+  const index = Book.findIndex((val) => val.id === bookId);
 
   // Validasi
   if (!('name' in payload)) {
@@ -121,7 +175,7 @@ handler.update = (request, h) => {
     }).code(400);
   }
 
-  if (!index.length) {
+  if (index === -1) {
     return h.response({
       status: 'fail',
       message: 'Gagal memperbarui buku. Id tidak ditemukan',
@@ -153,7 +207,7 @@ handler.update = (request, h) => {
   };
 
   return h.response({
-    statu: 'success',
+    status: 'success',
     message: 'Buku berhasil diperbarui',
   }).code(200);
 };
